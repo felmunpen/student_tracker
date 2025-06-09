@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="./styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div>
+                <div class="title">.Student<br><span class="camo">.</span>Tracker</div>
+            </div>
+            <div id="quote" class="text_block">
+                <h4>🤖 Chatbot</h2>
+                    <div id="chat">
+                        <div class="message bot">Bot: Hello! I'm the chatbot for this project. Ask me anything.
+                        </div>
+                    </div>
+                    <div id="message_and_send">
+                        <input type="text" id="input" placeholder="Write your message." />
+                        <button onclick="sendMessage()">Send</button>
+                    </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="navbar" id="navbar">
+                <a class="nav_link hover-underline-animation" id="about me" href="https://felipemunizpena.vercel.app/"
+                    target="_blank">about me</a>
+            </div>
+            <div class="visual" id="chart_container">
+                <canvas id="gradesByStudent" width="400" height="200"></canvas>
+                <canvas id="avgStudentGrade" width=" 400" height="200"></canvas>
+                <canvas id="avgBlockGrade" width=" 400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const block_labels = ['Arithmetic', 'Algebra', 'Geometry', 'Probability', 'Functions'];
+        const colors = ["cyan", "turquoise", "yellow", "orange", "blue", "violet"];
+
+        async function gradesByStudent() {
+            try {
+
+                const response = await fetch("http://localhost:8000/grades-by-user");
+                const data = await response.json();
+
+                var datasets = [];
+                for (let i in data) {
+                    var caster = data[i][0].split(",");
+                    data[i] = caster;
+
+                    let color_index = Math.floor(Math.random() * colors.length);
+
+                    student_dataset = {
+                        label: ' Grade',
+                        data: data[i],
+                        borderColor: colors[color_index],
+                        backgroundColor: colors[color_index],
+                        borderWidth: 5,
+                        borderRadius: 5,
+                        borderSkipped: true,
+                    }
+                    datasets.push(student_dataset);
+                }
+
+                const chart_data = {
+                    labels: block_labels,
+                    datasets: datasets
+                };
+
+                new Chart(document.getElementById('gradesByStudent'), {
+                    type: 'bar',
+                    data: chart_data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'none',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Grades by blocks'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Color para líneas del eje X
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Rojo para el eje Y
+                                }
+                            }
+                        }
+                    },
+                });
+            } catch (error) {
+                console.error("Error retrieving data:", error);
+            }
+        }
+
+        async function avgStudentGrade() {
+            try {
+
+                const response = await fetch("http://localhost:8000/avg-student-grade");
+                const data = await response.json();
+
+                let color_index = Math.floor(Math.random() * colors.length);
+                let color_line_5;
+                let color_avg_total;
+
+                do {
+                    color_line_5 = Math.floor(Math.random() * colors.length);
+                } while (color_line_5 == color_index);
+
+                do {
+                    color_avg_total = Math.floor(Math.random() * colors.length);
+                } while (!(color_avg_total == color_index || color_avg_total != color_line_5));
+
+
+                let students_array = [];
+                let line_5 = [];
+
+                for (let i = 1; i <= 30; i++) {
+                    students_array.push(i);
+                    line_5.push(5);
+                }
+
+                var cast_data = []
+                for (let i in data) {
+                    cast_data.push(data[i][0])
+                }
+
+                const avg_total = cast_data.reduce((sum, val) => sum + val, 0) / cast_data.length;
+                let avg_total_array = [];
+                for (let i = 1; i <= 30; i++) {
+                    avg_total_array.push(avg_total);
+                }
+
+                new Chart(document.getElementById('avgStudentGrade'), {
+                    type: 'line',
+                    data: {
+                        labels: students_array,
+                        datasets: [{
+                            label: ' Avg grade by student',
+                            data: cast_data,
+                            borderColor: colors[color_index],
+                        }, {
+                            label: ' Pass line',
+                            data: line_5,
+                            borderColor: colors[color_line_5],
+                            pointRadius: 0,
+                        }, {
+                            label: ' Avg grade',
+                            data: avg_total_array,
+                            borderColor: colors[color_avg_total],
+                            pointRadius: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Students average grades'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Color para líneas del eje X
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Rojo para el eje Y
+                                },
+                                min: 0,
+                                max: 10,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    },
+
+
+                });
+            } catch (error) {
+                console.error("Error retrieving data:", error);
+            }
+        }
+
+        async function avgBlockGrade() {
+            try {
+                const response = await fetch("http://localhost:8000/avg-block-grade");
+                const data = await response.json();
+
+                let color_index = Math.floor(Math.random() * colors.length);
+
+                var cast_data = []
+                for (let i in data) {
+                    cast_data.push(data[i][0])
+                }
+
+                new Chart(document.getElementById('avgBlockGrade'), {
+                    type: 'line',
+                    data: {
+                        labels: block_labels,
+                        datasets: [{
+                            label: ' Avg grade:',
+                            data: cast_data,
+                            borderColor: colors[color_index],
+                            backgroundColor: colors[color_index],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'none',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Grades overview by block'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Color para líneas del eje X
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgb(70, 70, 70)' // Rojo para el eje Y
+                                }
+                            }
+                        }
+                    },
+                });
+            } catch (error) {
+                console.error("Error retrieving data:", error);
+            }
+        }
+
+
+
+        gradesByStudent();
+
+        avgBlockGrade();
+
+        avgStudentGrade();
+
+        /**********************************/
+
+        async function sendMessage() {
+            //Mensaje escrito por el usuario
+            const input = document.getElementById("input");
+            //Ventana de chat - histórico de mensajes
+            const chat = document.getElementById("chat");
+            //Valor (contenido, trimeado) de la caja input
+            const userMessage = input.value.trim();
+            if (!userMessage) return;
+
+            //Mostrar mensaje del usuario añadiéndolo a la ventana de chat
+            chat.innerHTML += `<div class="message user">Tú: ${userMessage}</div>`;
+            //Vaciamos la caja de enviar mensaje
+            input.value = "";
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/chatbot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                const data = await res.json();
+                chat.innerHTML += `<div class="message bot">Bot: ${data.response}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } catch (err) {
+                chat.innerHTML += `<div class="message bot">[Error al obtener respuesta]</div>`;
+            }
+        }
+
+        // Enter = enviar mensaje
+        document.getElementById("input").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") sendMessage();
+        });
+
+    </script>
+
+</body>
+
+</html>
